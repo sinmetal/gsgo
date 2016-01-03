@@ -1,8 +1,7 @@
 queue:
 - name: dataloader
-  rate: 20/s
-  bucket_size: 20
-  max_concurrent_requests: 20
+  rate: 50/s
+  bucket_size: 50
   retry_parameters:
     task_age_limit: 10m
   target: testfilereader

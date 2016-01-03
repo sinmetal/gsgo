@@ -3,6 +3,7 @@ package gsgo
 import (
 	"bufio"
 	"encoding/csv"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,7 +17,7 @@ import (
 	"google.golang.org/appengine/taskqueue"
 )
 
-const Kind = "Sample2"
+const Kind = "Sample3"
 
 type Sample struct {
 	Values []float64 `datastore:",noindex"`
@@ -24,12 +25,45 @@ type Sample struct {
 
 func init() {
 	http.HandleFunc("/", handler)
-	http.HandleFunc("/read", handlerFileRead)
+	http.HandleFunc("/admin/start", handlerStart)
+	http.HandleFunc("/queue/read", handlerFileRead)
 	http.HandleFunc("/queue/data", handlerDataPut)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello File Reader"))
+}
+
+func handlerStart(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+
+	param := r.FormValue("files")
+	log.Infof(c, "File Param = %s", param)
+
+	files := strings.Split(param, ",")
+	log.Infof(c, "Files %v, len = %d", files, len(files))
+	if len(files) < 1 {
+		log.Errorf(c, "invalid parameter : %s", param)
+		http.Error(w, "invalid parameter", http.StatusBadRequest)
+		return
+	}
+
+	for _, file := range files {
+		path := fmt.Sprintf("/queue/read?file=%s", file)
+		t := &taskqueue.Task{
+			Header: http.Header{
+				"X-App-Version": {appengine.VersionID(c)},
+			},
+			Path:   path,
+			Method: "GET",
+		}
+		_, err := taskqueue.Add(c, t, "dataloader")
+		if err != nil {
+			log.Errorf(c, "add task : %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
 }
 
 func handlerFileRead(w http.ResponseWriter, r *http.Request) {
