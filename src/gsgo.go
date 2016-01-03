@@ -84,24 +84,8 @@ func handlerFileRead(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		//		if cnt%30 == 0 {
-		//			log.Infof(c, "read count = %d", cnt)
-		//			_, err = taskqueue.AddMulti(c, tasks, "dataloader")
-		//			if err != nil {
-		//				log.Errorf(c, "add taskqueue : %v", err)
-		//				http.Error(w, err.Error(), http.StatusInternalServerError)
-		//				return
-		//			}
-		//			tasks = make([]*taskqueue.Task, 0, 30)
-		//		}
 	}
 	log.Infof(c, "read count = %d", cnt)
-	//	_, err = taskqueue.AddMulti(c, tasks, "dataloader")
-	//	if err != nil {
-	//		log.Errorf(c, "add taskqueue : %v", err)
-	//		http.Error(w, err.Error(), http.StatusInternalServerError)
-	//		return
-	//	}
 
 	w.Write([]byte("done."))
 }
